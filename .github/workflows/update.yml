@@ -48,6 +48,7 @@ jobs:
         run: |
           git config user.name "lh-bot"
           git config user.email "lh-bot@users.noreply.github.com"
+          mkdir -p offline && touch offline/.gitkeep
           git add -A data offline
           if git diff --cached --quiet; then echo "沒有新資料"; exit 0; fi
           git commit -m "data: LH $(TZ=Asia/Shanghai date +%F)"
