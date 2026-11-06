@@ -62,14 +62,22 @@ def fetch_api(kind, d, sess):
         try:
             tk = token(sess)
             r = sess.post(f"http://{HOST}/dceapi/forward/publicweb/dailystat/dayQuotes",
-                          json={"varietyId": "lh", "tradeDate": d.strftime("%Y%m%d"), "tradeType": trade_type, "lang": "zh"},
-                          headers={**UA, "apikey": API_KEY, "Authorization": f"Bearer {tk}", "Content-Type": "application/json"},
+                          json={"varietyId": "lh", "tradeDate": d.strftime("%Y%m%d"), "tradeType": trade_type, "lang": "zh",
+                                **({"statisticsType": 0} if kind == "opt" else {})},
+                          headers={**UA, "apikey": API_KEY, "Authorization": f"Bearer {tk}", "Content-Type": "application/json",
+                                   "tradeType": trade_type, "lang": "zh"},
                           timeout=30)
             DEBUG.append(f"api {kind} {d} -> {r.status_code} {len(r.content)}")
             if r.status_code == 401:
                 _TOKEN["v"] = None
+                DEBUG.append("401：憑證有效但可能尚未開通「日行情」資料權限，或 token 過期")
                 continue
             js = r.json()
+            if js.get("success") is False or (js.get("code") not in (None, 200, "200", 0, "0")):
+                DEBUG.append(f"api {kind} {d} 回應：{str(js)[:200]}")
+                if "频次" in str(js):
+                    time.sleep(62)
+                    continue
             data = js.get("data") or []
             if isinstance(data, dict):
                 data = data.get("list") or data.get("rows") or data.get("data") or []
@@ -374,7 +382,7 @@ def main():
         DEBUG.append(f"{d} futs={len(futs)} opts={len(rows)}")
         if futs and rows:
             days.append((d, futs, rows))
-        time.sleep(0.8)
+        time.sleep(2.5 if API_KEY else 0.8)
 
     os.makedirs(os.path.join(DATA, "daily"), exist_ok=True)
     if not days:
