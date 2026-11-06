@@ -1,0 +1,54 @@
+name: 更新生豬 Gamma Flip 資料
+# 首次執行或 data/history.json 不存在時會自動往回補 45 天
+
+on:
+  schedule:
+    # 北京／台北時間週一至週五 16:37、17:13、18:07（大商所約 15:30 後公布當日行情）
+    - cron: "37 8 * * 1-5"
+    - cron: "13 9 * * 1-5"
+    - cron: "7 10 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "往回抓幾個日曆天"
+        default: "14"
+  push:
+    paths:
+      - "scripts/lh_gex.py"
+      - ".github/workflows/update.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lh-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install requests
+      - name: 抓取大商所資料並計算 Gamma Flip
+        env:
+          DCE_API_KEY: ${{ secrets.DCE_API_KEY }}
+          DCE_SECRET: ${{ secrets.DCE_SECRET }}
+        run: |
+          DAYS="${{ github.event.inputs.days }}"
+          if [ -z "$DAYS" ]; then
+            if [ -f data/history.json ]; then DAYS=14; else DAYS=45; fi
+          fi
+          python scripts/lh_gex.py --days "$DAYS"
+          if [ -f data/latest.json ]; then python scripts/build_offline.py LH; fi
+      - name: 提交資料
+        run: |
+          git config user.name "lh-bot"
+          git config user.email "lh-bot@users.noreply.github.com"
+          git add -A data offline
+          if git diff --cached --quiet; then echo "沒有新資料"; exit 0; fi
+          git commit -m "data: LH $(TZ=Asia/Shanghai date +%F)"
+          git push

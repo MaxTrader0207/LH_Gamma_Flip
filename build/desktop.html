@@ -1,0 +1,756 @@
+<title>生豬 Gamma Flip 戰情板</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&family=Saira+Condensed:wght@600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Layout: 交易桌面板 — 上方控制列 → 體制總覽 → 三類合約卡 → Gamma 曲線 → 履約價分佈 → 到期明細 */
+:root{
+  --bg:#f3f4f6; --panel:#ffffff; --line:#d9dde4; --ink:#16202c; --muted:#5b6676;
+  --accent:#1f5fbf; --pos:#16845b; --neg:#c43c2f; --warn:#b07400; --flip:#7b3fd1;
+  --wed:#1f78b4; --fri:#e08a1e; --mon:#5a6b7d; --all:#16202c;
+  --chip:#e8ecf2;
+  --f-display:"Saira Condensed","Noto Sans TC",system-ui,sans-serif;
+  --f-body:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f141b; --panel:#161d27; --line:#2a3443; --ink:#e6ebf2; --muted:#93a0b2;
+  --accent:#6aa3ff; --pos:#3ccf8e; --neg:#ff6b5c; --warn:#f0b43c; --flip:#b58cff;
+  --wed:#5fb0f0; --fri:#f4a845; --mon:#9aa9ba; --all:#e6ebf2; --chip:#222c3a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141b; --panel:#161d27; --line:#2a3443; --ink:#e6ebf2; --muted:#93a0b2;
+  --accent:#6aa3ff; --pos:#3ccf8e; --neg:#ff6b5c; --warn:#f0b43c; --flip:#b58cff;
+  --wed:#5fb0f0; --fri:#f4a845; --mon:#9aa9ba; --all:#e6ebf2; --chip:#222c3a; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--f-display);font-weight:700;font-size:30px;letter-spacing:.02em;margin:0;line-height:1.1;text-wrap:balance}
+h2{font-size:15px;margin:0;font-weight:700}
+.sub{color:var(--muted);font-size:13px}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.toplinks{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.moblink{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--accent);text-decoration:none}
+.src{display:inline-flex;gap:6px;align-items:center;font-size:12px;padding:3px 10px;border-radius:999px;background:var(--chip);color:var(--muted)}
+.src.demo{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--ink)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 14px;align-items:end}
+label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+input,select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:7px 12px}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;grid-column:1/-1}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr);gap:16px}
+.regime{display:flex;flex-direction:column;gap:10px;border-left:4px solid var(--muted)}
+.regime.pos{border-left-color:var(--pos)}.regime.neg{border-left-color:var(--neg)}.regime.near{border-left-color:var(--warn)}
+.pill{align-self:flex-start;font-weight:700;font-size:13px;padding:3px 10px;border-radius:999px;background:var(--chip)}
+.pos .pill{background:color-mix(in srgb,var(--pos) 18%,transparent);color:var(--pos)}
+.neg .pill{background:color-mix(in srgb,var(--neg) 18%,transparent);color:var(--neg)}
+.near .pill{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.big{font-family:var(--f-mono);font-size:34px;font-weight:600;line-height:1.1}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px}
+.kv dt{color:var(--muted)}.kv dd{margin:0;font-family:var(--f-mono);text-align:right}
+.read{font-size:13px;color:var(--ink);margin:0}
+.groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.gcard{display:flex;flex-direction:column;gap:8px;border-top:3px solid var(--c)}
+.gcard h3{margin:0;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.gcard .flip{font-family:var(--f-mono);font-size:22px;font-weight:600}
+.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:999px}
+.tag.pos{background:color-mix(in srgb,var(--pos) 18%,transparent);color:var(--pos)}
+.tag.neg{background:color-mix(in srgb,var(--neg) 18%,transparent);color:var(--neg)}
+.tag.na{background:var(--chip);color:var(--muted)}
+.tag.near{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.summary{margin:0;font-size:13px;line-height:1.6;padding:10px 12px;border-radius:6px;background:var(--chip)}
+.summary>b{display:block;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em;margin-bottom:2px}
+.summary{display:flex;flex-direction:column;gap:6px}
+.summary .verdict{margin:0}
+.summary ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.summary .lv{font-size:12px;padding:6px 0;border-block:1px solid var(--line)}
+.summary em.warn{font-style:normal;font-weight:700;color:var(--neg)}
+table.mini{min-width:0;font-size:12px}
+table.mini th,table.mini td{padding:4px 6px}
+table.mini td:nth-child(2){font-family:var(--f-mono)}
+.chartbox{position:relative;height:340px}
+.chartbox.tall{height:380px}
+.head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:720px}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:12px}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+td{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+td.lbl{font-family:var(--f-body)}
+.exportbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;margin-bottom:-4px}
+.exbtns{display:flex;flex-wrap:wrap;gap:6px}
+.exbtns button{padding:5px 12px;font-size:12px}
+.exbtns.small button{padding:3px 9px;font-size:11.5px}
+body.nodl .dl{display:none}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;z-index:20;max-width:calc(100% - 32px)}
+.copybox{width:100%;min-height:160px;font-family:var(--f-mono);font-size:12px;box-sizing:border-box}
+tr.off td{opacity:.42}
+tr.off td:first-child{opacity:1}
+tfoot td{font-weight:600;border-top:2px solid var(--ink);border-bottom:none}
+.quick{display:flex;flex-wrap:wrap;gap:6px}
+.quick button{padding:4px 10px;font-size:12px;border-radius:999px}
+.incstatus{font-size:13px;padding:8px 10px;border-radius:6px;background:var(--chip);margin-bottom:8px;transition:background-color .6s}
+.incstatus{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;line-height:1.7}
+.incstatus b{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:700}
+.incstatus .hl-flip{color:var(--flip)}
+.incstatus .hl-pos{color:var(--pos)}
+.incstatus .hl-neg{color:var(--neg)}
+.incstatus .hl-warn{color:var(--warn);font-family:var(--f-body)}
+.incstatus .hl-ok{color:var(--muted);font-family:var(--f-body);font-weight:500}
+.incstatus .hl-dist,.incstatus .hl-reg{font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:999px}
+.incstatus .hl-dist.up{color:var(--pos);background:color-mix(in srgb,var(--pos) 14%,transparent)}
+.incstatus .hl-dist.dn{color:var(--neg);background:color-mix(in srgb,var(--neg) 14%,transparent)}
+.incstatus .hl-reg.pos{color:var(--pos);background:color-mix(in srgb,var(--pos) 14%,transparent)}
+.incstatus .hl-reg.neg{color:var(--neg);background:color-mix(in srgb,var(--neg) 14%,transparent)}
+.incstatus .hl-note{color:var(--muted);font-size:12px;flex-basis:100%}
+.incstatus.flash{background:color-mix(in srgb,var(--accent) 22%,var(--chip))}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:var(--c)}
+details{font-size:13px}
+details summary{cursor:pointer;font-weight:700}
+details ol{padding-left:20px;margin:8px 0}
+code{font-family:var(--f-mono);font-size:12px;background:var(--chip);padding:1px 5px;border-radius:4px}
+.msg{font-size:13px;color:var(--neg)}
+@media (max-width:820px){.hero{grid-template-columns:1fr}.groups{grid-template-columns:1fr}.chartbox{height:280px}.chartbox.tall{height:300px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>生豬 Gamma Flip 戰情板</h1>
+      <div class="sub">大商所生豬期權 近月 × 次月 × 遠月｜造市商 Gamma 曝險與 Flip 價位（以主力期貨計價）</div>
+    </div>
+    <div class="toplinks"><a id="mobLink" class="moblink" href="./mobile.html" target="_blank" rel="noopener">手機版</a><span id="srcBadge" class="src demo">範例資料</span></div>
+  </div>
+
+  <section class="panel">
+    <div class="controls">
+      <label for="spot">生豬主力期貨價（元／噸）<input id="spot" type="number" step="5" inputmode="decimal"></label>
+      <label for="valDate">評價時點<input id="valDate" type="datetime-local"></label>
+      <label for="signMode">造市商方向假設
+        <select id="signMode">
+          <option value="naive">Call 多、Put 空（SqueezeMetrics）</option>
+          <option value="short">全部空方（散戶淨買）</option>
+        </select>
+      </label>
+      <label for="scanPct">掃描範圍 ±%<input id="scanPct" type="number" min="2" max="20" step="1" value="8"></label>
+      <label for="ivFallback">IV 備援值 %<input id="ivFallback" type="number" min="5" max="120" step="1" value="18"></label>
+      <label for="rate">無風險利率 %<input id="rate" type="number" min="0" max="10" step="0.1" value="1.5"></label>
+      <div class="btnrow">
+        <span class="file"><button class="primary" type="button" tabindex="-1">開啟歷史日資料 JSON</button><input id="csvFile" type="file" accept=".json,application/json" aria-label="開啟 data/daily 的歷史日資料 JSON"></span>
+        <button id="btnAuto" type="button">回到每日自動資料</button>
+        <button id="btnDemo" type="button">載入範例資料</button>
+        <span id="msg" class="msg" role="status"></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero">
+    <div id="regimeCard" class="panel regime">
+      <span class="sub">合併 Gamma Flip（全部勾選到期）</span>
+      <div id="flipAll" class="big">—</div>
+      <span id="regimePill" class="pill">—</span>
+      <dl class="kv">
+        <dt>現價</dt><dd id="kSpot">—</dd>
+        <dt>距 Flip</dt><dd id="kDist">—</dd>
+        <dt>總 GEX（每 1%）</dt><dd id="kGex">—</dd>
+        <dt>每 1% 避險量</dt><dd id="kHedge">—</dd>
+        <dt>主力近 5 日 ATR</dt><dd id="kAtr">—</dd>
+        <dt>Call Wall / Put Wall</dt><dd id="kWalls">—</dd>
+      </dl>
+      <p id="readout" class="read"></p>
+    </div>
+    <div class="panel">
+      <div class="head">
+        <h2>Gamma 曲線：假設主力期貨移動到不同價位時的總 GEX（各月同比例移動）</h2>
+        <div class="legend"><span><i style="background:var(--all)"></i>合併</span><span><i style="background:var(--wed)"></i>近月期權</span><span><i style="background:var(--fri)"></i>次月期權</span><span><i style="background:var(--mon)"></i>遠月期權</span><span><i style="background:var(--flip)"></i>Flip</span></div>
+      </div>
+      <div class="chartbox"><canvas id="profileChart" aria-label="Gamma 曲線"></canvas></div>
+      <div class="sub">縱軸：萬元／主力每變動 1%。曲線穿越 0 的位置即 Flip；實心點為各曲線的 Flip。</div>
+    </div>
+  </section>
+
+  <div class="exportbar">
+    <h2>各區塊小結與具體操作</h2>
+    <div class="exbtns">
+      <button type="button" data-ex="copy" data-g="all">複製全部</button>
+      <button type="button" data-ex="md" data-g="all" class="dl">下載全部 .md</button>
+      <button type="button" data-ex="txt" data-g="all" class="dl">下載全部 .txt</button>
+    </div>
+  </div>
+  <section class="groups" id="groups"></section>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <div class="sub">判讀以「合併」Gamma 體制為主軸（造市商避險的是整本帳），所有價位以生豬主力期貨表示，選擇權組合列出該月份實際履約價。日波動統一取剩餘約 30 天到期的價平 IV；停損緩衝為 0.5 個主力近 5 日 ATR，價差寬度為 1 個 ATR 取整到履約價間距，範例資料時以 1.6 倍日波動估算 ATR；選擇權組合以前一日結算價估算。結果會隨上方「方向假設」改變，規則自動產生，僅供判讀參考，不構成投資建議。</div>
+
+  <section class="panel">
+    <div class="head">
+      <h2>各履約價淨 GEX（現價附近 ±5%）</h2>
+      <div class="legend"><span><i style="background:var(--wed)"></i>近月期權</span><span><i style="background:var(--fri)"></i>次月期權</span><span><i style="background:var(--mon)"></i>遠月期權</span></div>
+    </div>
+    <div class="chartbox tall"><canvas id="strikeChart" aria-label="各履約價淨 GEX"></canvas></div>
+    <div class="sub">正值長條：造市商在該履約價為正 Gamma（逆勢避險）；負值：負 Gamma（順勢避險）。最高正值為 Call Wall，最低負值為 Put Wall。</div>
+  </section>
+
+  <section class="panel">
+    <div class="head">
+      <h2>每日 Flip 走勢</h2>
+      <div class="legend"><span><i style="background:var(--accent)"></i>主力期貨結算價</span><span><i style="background:var(--flip)"></i>合併 Flip</span><span><i style="background:var(--wed)"></i>近月期權 Flip</span><span><i style="background:var(--fri)"></i>次月期權 Flip</span><span><i style="background:var(--mon)"></i>月選 Flip</span></div>
+    </div>
+    <div class="chartbox"><canvas id="historyChart" aria-label="每日 Flip 走勢"></canvas></div>
+    <div id="histNote" class="sub">結算價在合併 Flip 之上＝正 Gamma 日；跌破 Flip＝負 Gamma 日。依上方方向假設切換。</div>
+  </section>
+
+  <section class="panel">
+    <div class="head"><h2>到期明細</h2>
+      <div class="quick" role="group" aria-label="快速選擇到期">
+        <button type="button" data-pick="all">全部</button><button type="button" data-pick="N1">只看近月</button><button type="button" data-pick="N2">只看次月</button><button type="button" data-pick="N1N2">近月＋次月</button><button type="button" data-pick="M">只看遠月</button><button type="button" data-pick="near">近 2 檔</button>
+      </div>
+    </div>
+    <div id="incStatus" class="incstatus" aria-live="polite"></div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>納入</th><th>契約</th><th>到期日</th><th>剩餘天數</th><th>Call OI</th><th>Put OI</th><th>價平 IV</th><th>GEX 萬元/1%</th><th>Flip</th><th>Call Wall</th><th>Put Wall</th></tr></thead>
+        <tbody id="expTable"></tbody>
+        <tfoot id="expFoot"></tfoot>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel">
+    <details>
+      <summary>資料取得與計算方法</summary>
+      <ol>
+        <li>每日自動更新：GitHub Actions 於交易日 16:37 起透過大商所對外門戶 API（需註冊的 apikey）下載生豬（LH）期貨與期權日行情，算好後存成 JSON；每天 18:33 由排程任務寫入本頁，開著的頁面會即時刷新。</li>
+        <li>手動模式：可開啟 repo 裡 data/daily/ 的任一天 JSON，回看過去某一天的 Gamma 結構。</li>
+        <li>每個期權月份以同月份生豬期貨為標的；以持倉量最大的「主力期貨」為基準價，履約價換算成主力等價（K × 主力價 ÷ 該月期貨價），所有月份放在同一條價格軸上合併。牆、磁吸、Flip 都以主力價格表示；選擇權組合則列出該月份實際履約價。</li>
+        <li>IV 若交易所資料有提供則直接採用，否則以 Black-76 由結算價反推。</li>
+        <li>GEX = 方向 × Γ × 持倉量 × 16 噸 × S² × 1%，單位萬元。每 1% 避險量 = Γ × 持倉量 × 1% × S（期貨手數）。</li>
+        <li>到期日依大商所規則：標的期貨交割月份前一個月的第 12 個交易日；大陸休市日列在 repo 的 data/holidays.json，長假前需更新。</li>
+      </ol>
+      <div class="sub">方向假設會決定曲線正負。生豬期權產業避險（養殖戶買 Put）與做市商報價並存，兩種假設都值得對照。</div>
+    </details>
+  </section>
+</div>
+
+<script>
+(function(){
+"use strict";
+const MULT=16, TX_MULT=1;
+let RANK={},STEP=50,MAIN="",SNAP_DEMO=false;
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const GROUPS=[{key:"N1",name:"近月期權",color:"--wed"},{key:"N2",name:"次月期權",color:"--fri"},{key:"M",name:"遠月期權",color:"--mon"}];
+
+let state={rows:[],spot:0,val:null,source:"demo",included:{}};
+
+/* ---------- math ---------- */
+const SQ2PI=Math.sqrt(2*Math.PI);
+const npdf=x=>Math.exp(-0.5*x*x)/SQ2PI;
+function ncdf(x){const t=1/(1+0.2316419*Math.abs(x));const d=0.3989423*Math.exp(-x*x/2);let p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));return x>0?1-p:p;}
+function b76(F,K,T,s,r,isCall){const sq=s*Math.sqrt(T);const d1=(Math.log(F/K)+0.5*s*s*T)/sq,d2=d1-sq,df=Math.exp(-r*T);return isCall?df*(F*ncdf(d1)-K*ncdf(d2)):df*(K*ncdf(-d2)-F*ncdf(-d1));}
+function gamma76(F,K,T,s,r){if(T<=0||s<=0)return 0;const sq=s*Math.sqrt(T);const d1=(Math.log(F/K)+0.5*s*s*T)/sq;return Math.exp(-r*T)*npdf(d1)/(F*sq);}
+function impliedVol(price,F,K,T,r,isCall){
+  if(!(price>0)||T<=0)return NaN;
+  const intr=Math.exp(-r*T)*Math.max(isCall?F-K:K-F,0);
+  if(price<=intr+0.05)return NaN;
+  let lo=0.01,hi=3;
+  if(b76(F,K,T,hi,r,isCall)<price)return NaN;
+  for(let i=0;i<70;i++){const m=(lo+hi)/2;if(b76(F,K,T,m,r,isCall)>price)hi=m;else lo=m;}
+  return (lo+hi)/2;
+}
+
+/* ---------- dates ---------- */
+function groupOf(code){const r=RANK[code];return r===0?"N1":r===1?"N2":"M";}
+const fmtD=d=>`${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}`;
+const wk=d=>"日一二三四五六"[d.getDay()];
+function yearFrac(exp,val){const e=new Date(exp.getFullYear(),exp.getMonth(),exp.getDate(),15,0);const ms=e-val;return Math.max(ms/864e5,0.15)/365;}
+
+/* ---------- JSON upload ---------- */
+function optionExpiry(y,m){let py=y,pm=m-1;if(pm<1){pm=12;py--;}let d=new Date(py,pm-1,1),n=0;
+  while(true){const w=d.getDay();if(w!==0&&w!==6){n++;if(n===12)return d;}d=new Date(d.getFullYear(),d.getMonth(),d.getDate()+1);}}
+
+/* ---------- demo ---------- */
+function demo(){
+  const val=new Date(2026,10,6,15,0),r=0.015,base=12150;
+  const months=[["LH2701",0,90000],["LH2703",-250,40000],["LH2705",300,20000]];
+  const futs={},rows=[];
+  for(const [u,dv,oi] of months){const F=base+dv;futs[u]={settle:F,open:F-50,high:F+180,low:F-200,close:F+20,oi};
+    const ex=optionExpiry(2000+ +u.slice(2,4),+u.slice(4)),T=yearFrac(ex,val);
+    const iso=`${ex.getFullYear()}-${String(ex.getMonth()+1).padStart(2,"0")}-${String(ex.getDate()).padStart(2,"0")}`;
+    const sc=u==="LH2701"?1.3:u==="LH2703"?0.8:0.4;
+    for(let K=10000;K<=14400;K+=200){const x=(K-F)/F,iv=0.24-0.2*x+1.2*x*x;
+      const co=Math.round(sc*(700*Math.exp(-Math.pow((x-0.04)/0.04,2))+(K%1000===0?250:0)*Math.exp(-Math.pow(x/0.07,2))));
+      const po=Math.round(sc*(900*Math.exp(-Math.pow((x+0.05)/0.05,2))+(K%1000===0?300:0)*Math.exp(-Math.pow(x/0.08,2))));
+      if(co>0)rows.push([u,iso,K,"C",Math.max(2.5,Math.round(b76(F,K,T,iv,r,true)/2.5)*2.5),co,+iv.toFixed(4),u]);
+      if(po>0)rows.push([u,iso,K,"P",Math.max(2.5,Math.round(b76(F,K,T,iv,r,false)/2.5)*2.5),po,+iv.toFixed(4),u]);}}
+  return {tradeDate:"2026-11-06",valuation:"2026-11-06T15:00:00+08:00",F:base,futContract:"LH2701",rows,futs,atr5:null};
+}
+
+/* ---------- engine ---------- */
+function prepare(){
+  const F=state.spot,r=(+$("rate").value||0)/100,fb=(+$("ivFallback").value||18)/100;
+  const byExp={};
+  for(const row of state.rows){
+    row.T=yearFrac(row.exp,state.val);
+    row.iv=isFinite(row.ivx)&&row.ivx>0?row.ivx:impliedVol(row.px,F,row.K,row.T,r,row.isCall);
+    (byExp[row.code]=byExp[row.code]||[]).push(row);
+  }
+  for(const code in byExp){
+    const list=byExp[code].sort((a,b)=>a.K-b.K);
+    // prefer OTM IV per strike
+    const good=list.filter(x=>isFinite(x.iv)&&((x.isCall&&x.K>=F)||(!x.isCall&&x.K<=F)));
+    const pool=good.length?good:list.filter(x=>isFinite(x.iv));
+    for(const x of list){
+      const otm=(x.isCall&&x.K>=F)||(!x.isCall&&x.K<=F);
+      if(isFinite(x.iv)&&otm)continue;
+      if(!pool.length){x.ivUse=fb;continue;}
+      let best=pool[0];for(const p of pool)if(Math.abs(p.K-x.K)<Math.abs(best.K-x.K))best=p;
+      x.ivUse=best.iv;
+    }
+    for(const x of list)if(x.ivUse===undefined)x.ivUse=isFinite(x.iv)?x.iv:fb;
+  }
+  return byExp;
+}
+function signOf(row){return $("signMode").value==="short"?-1:(row.isCall?1:-1);}
+function gexAt(rows,S,r){let g=0;for(const x of rows){const G=gamma76(S,x.K,x.T,x.ivUse,r);g+=signOf(x)*G*x.oi*(x.w||1)*MULT*S*S*0.01;}return g/1e4;}
+function hedgeAt(rows,S,r){let h=0;for(const x of rows){h+=signOf(x)*gamma76(S,x.K,x.T,x.ivUse,r)*x.oi*(x.w||1)*0.01*S;}return h;}
+function findFlip(grid,vals,S){
+  let best=null;
+  for(let i=1;i<grid.length;i++){
+    const a=vals[i-1],b=vals[i];
+    if((a<=0&&b>0)||(a>=0&&b<0)){const x=grid[i-1]+(grid[i]-grid[i-1])*(-a)/(b-a);if(best===null||Math.abs(x-S)<Math.abs(best-S))best=x;}
+  }
+  return best;
+}
+function walls(rows,S,r){
+  // byStrike：淨 GEX（給長條圖）；Call Wall＝現價以上 Call Gamma 曝險最大的履約價，Put Wall＝現價以下 Put Gamma 曝險最大的履約價
+  const by={},cg={},pg={};
+  for(const x of rows){const G=gamma76(S,x.K,x.T,x.ivUse,r)*x.oi*(x.w||1)*MULT*S*S*0.01/1e4;const kb=Math.round(x.K/STEP)*STEP;by[kb]=(by[kb]||0)+signOf(x)*G;
+    if(x.isCall)cg[kb]=(cg[kb]||0)+G;else pg[kb]=(pg[kb]||0)+G;}
+  let cw=null,pw=null;
+  for(const k in cg){if(+k>=S&&(cw===null||cg[k]>cg[cw]))cw=k;}
+  for(const k in pg){if(+k<=S&&(pw===null||pg[k]>pg[pw]))pw=k;}
+  return {byStrike:by,call:cw!==null&&cg[cw]>0?+cw:null,put:pw!==null&&pg[pw]>0?+pw:null};
+}
+
+function buildState(snap,source){
+  const S0=+snap.F,futs=snap.futs||{};
+  const exps=[...new Set(snap.rows.map(r=>r[1]))].sort();
+  RANK={};for(const r of snap.rows)RANK[r[0]]=exps.indexOf(r[1]);
+  MAIN=snap.futContract||"";
+  const rows=[];
+  for(const [code,exp,K,cp,px,oi,iv,und] of snap.rows){
+    const F0=futs[und||code]?.settle;if(!(F0>0))continue;
+    const ratio=S0/F0,[y,m,d]=exp.split("-").map(Number);
+    rows.push({code,und:und||code,grp:groupOf(code),exp:new Date(y,m-1,d),K:+K*ratio,Kr:+K,ratio,w:F0/S0,isCall:cp==="C",
+      px:px==null?NaN:+px*ratio,pxR:px==null?null:+px,ivx:iv==null?NaN:+iv,oi:+oi});}
+  const near=exps[0];const ks=[...new Set(snap.rows.filter(r=>r[1]===near).map(r=>+r[2]))].sort((a,b)=>a-b);
+  let st=Infinity;for(let i=1;i<ks.length;i++)st=Math.min(st,ks[i]-ks[i-1]);STEP=isFinite(st)&&st>0?st:50;
+  const val=new Date(snap.valuation||snap.tradeDate+"T15:00:00+08:00");
+  return {rows,spot:S0,val,source,tradeDate:snap.tradeDate,included:{},atr:+snap.atr5||null};
+}
+
+/* ---------- render ---------- */
+let profileChart,strikeChart;
+const fmt=(v,d=0)=>v===null||v===undefined||!isFinite(v)?"—":v.toLocaleString("zh-TW",{minimumFractionDigits:d,maximumFractionDigits:d});
+const sgn=(v,d=2)=>!isFinite(v)?"—":(v>0?"+":"")+fmt(v,d);
+
+const flipMarker={id:"flipMarker",afterDatasetsDraw(ch,args,opts){
+  const {ctx,chartArea:a,scales:{x,y}}=ch;if(!opts.lines)return;ctx.save();
+  for(const L of opts.lines){if(L.v===null||!isFinite(L.v))continue;const px=x.getPixelForValue(L.v);if(px<a.left||px>a.right)continue;
+    ctx.strokeStyle=L.color;ctx.setLineDash(L.dash||[]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px,a.top);ctx.lineTo(px,a.bottom);ctx.stroke();
+    ctx.setLineDash([]);ctx.fillStyle=L.color;ctx.font="600 11px "+css("--f-mono");ctx.textAlign=px>a.right-90?"right":"left";ctx.fillText(L.label,px+(ctx.textAlign==="left"?5:-5),a.top+12+(L.row||0)*14);}
+  if(y){const py=y.getPixelForValue(0);if(py>=a.top&&py<=a.bottom){ctx.strokeStyle=css("--muted");ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a.left,py);ctx.lineTo(a.right,py);ctx.stroke();}}
+  ctx.restore();}};
+
+function render(){
+  if(!state.rows.length)return;
+  const r=(+$("rate").value||0)/100,S=state.spot,pct=Math.min(20,Math.max(2,+$("scanPct").value||8))/100;
+  const byExp=prepare();
+  const codes=Object.keys(byExp).sort((a,b)=>byExp[a][0].exp-byExp[b][0].exp);
+  for(const c of codes)if(state.included[c]===undefined)state.included[c]=true;
+  const incRows=codes.filter(c=>state.included[c]).flatMap(c=>byExp[c]);
+  if(!incRows.length){$("msg").textContent="至少要勾選一個到期才能計算。";const c0=codes[0];state.included[c0]=true;return render();}
+  const grpRows={N1:[],N2:[],M:[]};for(const c of codes)if(state.included[c])grpRows[byExp[c][0].grp].push(...byExp[c]);
+
+  const N=400,grid=[];for(let i=0;i<=N;i++)grid.push(S*(1-pct+2*pct*i/N));
+  const curves={all:grid.map(s=>gexAt(incRows,s,r))};
+  for(const g of GROUPS)curves[g.key]=grid.map(s=>gexAt(grpRows[g.key],s,r));
+  const flips={all:findFlip(grid,curves.all,S)};for(const g of GROUPS)flips[g.key]=grpRows[g.key].length?findFlip(grid,curves[g.key],S):null;
+
+  // hero
+  const gNow=gexAt(incRows,S,r),hNow=hedgeAt(incRows,S,r),W=walls(incRows,S,r);
+  // 參考日波動：取剩餘天數最接近 30 天的到期之價平 IV（類似 VIX 的 30 天概念），所有區塊共用同一把尺
+  let refCode=null;for(const c of codes){if(!state.included[c])continue;if(refCode===null||Math.abs(byExp[c][0].T*365-30)<Math.abs(byExp[refCode][0].T*365-30))refCode=c;}
+  let refAtm=byExp[refCode][0];for(const x of byExp[refCode])if(Math.abs(x.K-S)<Math.abs(refAtm.K-S))refAtm=x;
+  const sdRef=S*refAtm.ivUse/Math.sqrt(252);
+  const fl=flips.all;
+  $("flipAll").textContent=fl===null?"區間內無 Flip":fmt(fl,0);
+  $("kSpot").textContent=fmt(S,0);
+  $("kDist").textContent=fl===null?"—":`${sgn(S-fl,0)} 元（${sgn((S-fl)/fl*100,2)}%）`;
+  $("kGex").textContent=`${sgn(gNow,0)} 萬元`;
+  $("kHedge").textContent=`${fmt(Math.abs(hNow),0)} 手期貨（${hNow>=0?"逆勢":"順勢"}）`;
+  $("kWalls").textContent=`${W.call?fmt(W.call,0):"—"} / ${W.put?fmt(W.put,0):"—"}`;
+  const card=$("regimeCard");card.className="panel regime";
+  const near=fl!==null&&Math.abs(S-fl)<0.5*sdRef;
+  let pill,read;
+  if(near){card.classList.add("near");pill="貼近 Flip｜體制轉換區";read=`現價距 Flip 不到半個日波動（±${fmt(Math.round(sdRef),0)} 元），避險方向隨時可能翻轉，波動最不穩定。`;}
+  else if(gNow>=0){card.classList.add("pos");pill="正 Gamma｜波動壓抑";read=`主力每漲 1%，造市商需賣出約 ${fmt(Math.abs(hNow),0)} 手期貨，跌則買回，價格傾向在 ${W.put?fmt(W.put,0):"下方"}～${W.call?fmt(W.call,0):"上方"} 間來回。`;}
+  else{card.classList.add("neg");pill="負 Gamma｜波動放大";read=`主力每跌 1%，造市商需再賣出約 ${fmt(Math.abs(hNow),0)} 手期貨，漲則追買，趨勢容易延續${fl?`，站回 ${fmt(fl,0)} 前波動偏大`:""}。`;}
+  $("regimePill").textContent=pill;$("readout").textContent=read;
+
+  // group cards —— 以「合併」Gamma 體制為主軸，各區塊提供自己的到期結構、到期後 Flip 位移與可執行的價位
+  const gc=$("groups");gc.innerHTML="";
+  for(const k in exportStore)delete exportStore[k];
+  exportMeta={S,fAll:fl,gAll:gNow,atr:state.atr>0?state.atr:null,atrEst:state.atr>0?null:Math.round(1.6*sdRef),mode:$("signMode").selectedOptions[0].textContent,
+    dataDate:state.source==="auto"?state.tradeDate:(state.source==="demo"?"範例資料":state.source),included:codes.filter(c=>state.included[c]),excluded:codes.filter(c=>!state.included[c])};
+  const atrReal=state.atr>0?state.atr:null,atr=atrReal||1.6*sdRef;
+  $("kAtr").textContent=atrReal?`${fmt(atrReal,0)} 元`:`約 ${fmt(Math.round(atr),0)} 元（估）`;
+  const ctx={S,r,grid,incRows,byExp,gAll:gNow,fAll:fl,wAll:W,sd:sdRef,refCode,A:atr,atrReal};
+  for(const g of GROUPS){
+    const rows=grpRows[g.key];const el=document.createElement("div");el.className="panel gcard";el.style.setProperty("--c",`var(${g.color})`);
+    if(!rows.length){el.innerHTML=`<h3><span>${g.name}</span><span class="tag na">未納入</span></h3><div class="sub">目前沒有勾選此類到期。</div>`;gc.appendChild(el);continue;}
+    const gg=gexAt(rows,S,r),w=walls(rows,S,r),f=flips[g.key];
+    const oi=rows.reduce((s,x)=>s+x.oi,0);
+    const codesIn=[...new Set(rows.map(x=>x.code))].sort((a,b)=>byExp[a][0].exp-byExp[b][0].exp);
+    const expInfo=codesIn.map(c=>expiryStats(c,byExp[c],S,r));
+    const adv=groupAdvice(g,{gg,w,expInfo},ctx);
+    exportStore[g.key]={g,adv,next:expInfo[0]};
+    el.innerHTML=`<h3><span>${g.name}</span><span class="tag ${adv.tagCls}">${adv.label}</span></h3>
+      <div class="exbtns small"><button type="button" data-ex="copy" data-g="${g.key}">複製</button><button type="button" data-ex="md" data-g="${g.key}" class="dl">下載 .md</button><button type="button" data-ex="txt" data-g="${g.key}" class="dl">下載 .txt</button></div>
+      <div class="summary">
+        <b>小結</b>
+        <p class="verdict">${adv.verdict}</p>
+        <dl class="kv lv">${adv.levels.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
+        <b>具體操作</b>
+        <ol>${adv.plan.map(t=>`<li>${t}</li>`).join("")}</ol>
+      </div>
+      <dl class="kv"><dt>本區塊 GEX（每 1%）</dt><dd>${sgn(gg,0)} 萬元</dd><dt>本區塊 Flip</dt><dd>${f===null?"區間內無":fmt(f,0)}</dd><dt>本區塊 Call / Put Wall</dt><dd>${w.call?fmt(w.call,0):"—"} / ${w.put?fmt(w.put,0):"—"}</dd><dt>未平倉合計</dt><dd>${fmt(oi,0)} 口</dd></dl>
+      <div class="tablewrap"><table class="mini"><thead><tr><th>到期</th><th>到期日｜剩餘</th><th>磁吸</th><th>痛點</th></tr></thead><tbody>${
+        expInfo.map(e=>`<tr><td>${e.code}</td><td>${fmtD(e.exp).slice(5)}（${wk(e.exp)}）${e.days.toFixed(1)}天</td><td>${e.pin?fmt(Math.round(e.pin/e.ratio)):"—"}</td><td>${e.maxPain?fmt(Math.round(e.maxPain/e.ratio)):"—"}</td></tr>`).join("")}</tbody></table></div>`;
+    gc.appendChild(el);
+  }
+
+  // profile chart
+  const ds=[{label:"合併",data:curves.all,borderColor:css("--all"),borderWidth:2.4}];
+  for(const g of GROUPS)if(grpRows[g.key].length)ds.push({label:g.name,data:curves[g.key],borderColor:css(g.color),borderWidth:1.6});
+  const pts=[];const add=(v,lab,color)=>{if(v!==null)pts.push({x:v,y:0,lab,color});};
+  add(flips.all,"合併",css("--flip"));for(const g of GROUPS)add(flips[g.key],g.name,css(g.color));
+  const data={datasets:[...ds.map(d=>({...d,data:d.data.map((y,i)=>({x:grid[i],y})),pointRadius:0,tension:0.2,fill:false})),
+    {label:"Flip 點",data:pts,type:"scatter",pointRadius:5,pointBackgroundColor:pts.map(p=>p.color),pointBorderColor:css("--panel"),pointBorderWidth:1.5}]};
+  const lines=[{v:S,label:`現價 ${fmt(S,0)}`,color:css("--accent"),dash:[],row:0},{v:flips.all,label:`Flip ${fmt(flips.all,0)}`,color:css("--flip"),dash:[5,4],row:1}];
+  const base={responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"nearest",intersect:false,axis:"x"},
+    plugins:{legend:{display:false},flipMarker:{lines},tooltip:{callbacks:{title:it=>`主力 ${fmt(it[0].parsed.x,0)}`,label:it=>it.dataset.label==="Flip 點"?`${it.raw.lab} Flip：${fmt(it.raw.x,0)}`:`${it.dataset.label}：${sgn(it.parsed.y,0)} 萬元`}}},
+    scales:{x:{type:"linear",min:grid[0],max:grid[N],ticks:{color:css("--muted"),callback:v=>fmt(v,0),maxTicksLimit:8},grid:{color:css("--line")}},
+            y:{ticks:{color:css("--muted"),callback:v=>fmt(v,1)},grid:{color:css("--line")},title:{display:true,text:"萬元 / 1%",color:css("--muted")}}}};
+  if(profileChart)profileChart.destroy();
+  profileChart=new Chart($("profileChart"),{type:"line",data,options:base,plugins:[flipMarker]});
+
+  // strike chart
+  const lo=S*0.95,hi=S*1.05;
+  const strikes=[...new Set(incRows.map(x=>x.K))].filter(k=>k>=lo&&k<=hi).sort((a,b)=>a-b);
+  const sds=[];
+  for(const g of GROUPS){if(!grpRows[g.key].length)continue;const w=walls(grpRows[g.key],S,r).byStrike;sds.push({label:g.name,data:strikes.map(k=>w[k]||0),backgroundColor:css(g.color),stack:"s",borderWidth:0});}
+  if(strikeChart)strikeChart.destroy();
+  const sLines=[{v:strikes.findIndex(k=>k>=S)-0.5,label:`現價 ${fmt(S,0)}`,color:css("--accent"),row:0}];
+  if(flips.all!==null&&flips.all>=lo&&flips.all<=hi){const j=strikes.findIndex(k=>k>=flips.all);sLines.push({v:j-0.5,label:`Flip ${fmt(flips.all,0)}`,color:css("--flip"),dash:[5,4],row:1});}
+  strikeChart=new Chart($("strikeChart"),{type:"bar",data:{labels:strikes.map(k=>String(k)),datasets:sds},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false},flipMarker:{lines:sLines},
+      tooltip:{callbacks:{title:it=>`履約價 ${it[0].label}`,label:it=>`${it.dataset.label}：${sgn(it.parsed.y,1)} 萬元`}}},
+      scales:{x:{stacked:true,ticks:{color:css("--muted"),autoSkip:true,maxRotation:0,maxTicksLimit:12},grid:{display:false}},
+              y:{stacked:true,ticks:{color:css("--muted"),callback:v=>fmt(v,2)},grid:{color:css("--line")},title:{display:true,text:"萬元 / 1%",color:css("--muted")}}}},
+    plugins:[{id:"catLines",afterDatasetsDraw(ch){const {ctx,chartArea:a,scales:{x,y}}=ch;ctx.save();
+      for(const L of sLines){if(L.v<0)continue;const px=(x.getPixelForValue(Math.floor(L.v))+x.getPixelForValue(Math.ceil(L.v)))/2;ctx.strokeStyle=L.color;ctx.setLineDash(L.dash||[]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px,a.top);ctx.lineTo(px,a.bottom);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=L.color;ctx.font="600 11px "+css("--f-mono");ctx.textAlign=px>a.right-90?"right":"left";ctx.fillText(L.label,px+(ctx.textAlign==="left"?5:-5),a.top+12+L.row*14);}
+      const py=y.getPixelForValue(0);ctx.strokeStyle=css("--muted");ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(a.left,py);ctx.lineTo(a.right,py);ctx.stroke();ctx.restore();}}]});
+
+  // table
+  const tb=$("expTable");tb.innerHTML="";
+  for(const c of codes){
+    const rows=byExp[c],g=GROUPS.find(x=>x.key===rows[0].grp),exp=rows[0].exp;
+    const on=state.included[c];
+    const dte=(rows[0].T*365);
+    const coi=rows.filter(x=>x.isCall).reduce((s,x)=>s+x.oi,0),poi=rows.filter(x=>!x.isCall).reduce((s,x)=>s+x.oi,0);
+    let atm=rows[0];for(const x of rows)if(Math.abs(x.K-S)<Math.abs(atm.K-S))atm=x;
+    const cv=grid.map(s=>gexAt(rows,s,r));const f=findFlip(grid,cv,S);const w=walls(rows,S,r);const gg=gexAt(rows,S,r);
+    const tr=document.createElement("tr");tr.style.setProperty("--c",`var(${g.color})`);if(!on)tr.className="off";
+    tr.innerHTML=`<td class="lbl"><input type="checkbox" id="inc-${c}" ${on?"checked":""} aria-label="納入 ${c}"></td><td class="lbl"><span class="dot"></span>${c}　<span class="sub">${g.name}</span></td><td>${fmtD(exp)}（${wk(exp)}）</td><td>${dte.toFixed(1)}</td><td>${fmt(coi)}</td><td>${fmt(poi)}</td><td>${fmt(atm.ivUse*100,1)}%</td><td style="color:var(${gg>=0?"--pos":"--neg"})">${sgn(gg,0)}</td><td>${f===null?"—":fmt(f,0)}</td><td>${w.call?fmt(w.call):"—"}</td><td>${w.put?fmt(w.put):"—"}</td>`;
+    tb.appendChild(tr);
+    tr.querySelector("input").addEventListener("change",e=>{state.included[c]=e.target.checked;rerender();});
+  }
+  // 合併列：只計已納入的到期，隨勾選即時變動
+  const nIn=codes.filter(c=>state.included[c]).length;
+  const cAll=incRows.filter(x=>x.isCall).reduce((s,x)=>s+x.oi,0),pAll=incRows.filter(x=>!x.isCall).reduce((s,x)=>s+x.oi,0);
+  $("expFoot").innerHTML=`<tr><td class="lbl"></td><td class="lbl">合併（納入 ${nIn}／${codes.length} 檔）</td><td></td><td></td><td>${fmt(cAll)}</td><td>${fmt(pAll)}</td><td></td><td style="color:var(${gNow>=0?"--pos":"--neg"})">${sgn(gNow,0)}</td><td>${fl===null?"—":fmt(fl,0)}</td><td>${W.call?fmt(W.call):"—"}</td><td>${W.put?fmt(W.put):"—"}</td></tr>`;
+  const off=codes.filter(c=>!state.included[c]);
+  const st=$("incStatus");
+  const pos=gNow>=0,above=fl!==null&&S>=fl;
+  st.innerHTML=`目前合併 Flip（主力 ${MAIN}） <b class="hl-flip">${fl===null?"區間內無":fmt(fl,0)}</b>`
+    +(fl!==null?`<span class="hl-dist ${above?"up":"dn"}">現價${above?"高於":"低於"} ${fmt(Math.abs(S-fl),0)} 元</span>`:"")
+    +`｜總 GEX <b class="${pos?"hl-pos":"hl-neg"}">${sgn(gNow,0)} 萬元</b>`
+    +`<span class="hl-reg ${pos?"pos":"neg"}">${pos?"正 Gamma":"負 Gamma"}</span>`
+    +`｜${off.length?`<b class="hl-warn">已排除：${off.join("、")}</b>`:`<b class="hl-ok">已納入全部到期</b>`}`
+    +`<span class="hl-note">上方總覽、曲線、各區塊建議都只計算已勾選的到期。</span>`;
+  if(state._flash){st.classList.remove("flash");void st.offsetWidth;st.classList.add("flash");setTimeout(()=>st.classList.remove("flash"),700);state._flash=false;}
+  renderHistory();
+}
+
+function rerender(){state._flash=true;$("incStatus").textContent="重新計算中…";requestAnimationFrame(()=>setTimeout(render,0));}
+document.querySelector(".quick").addEventListener("click",e=>{
+  const k=e.target.dataset&&e.target.dataset.pick;if(!k||!state.rows.length)return;
+  const list=[...new Set(state.rows.map(x=>x.code))].sort((a,b)=>{const ea=state.rows.find(x=>x.code===a).exp,eb=state.rows.find(x=>x.code===b).exp;return ea-eb;});
+  list.forEach((c,i)=>{const g=groupOf(c);state.included[c]=k==="all"||(k==="near"?i<2:k.includes(g));});
+  rerender();});
+
+/* ---------- export ---------- */
+const exportStore={};let exportMeta=null;
+const strip=h=>h.replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ");
+function exportText(keys,fmtType){
+  const m=exportMeta,md=fmtType==="md",L=[];
+  const now=new Date(),stamp=`${fmtD(now)} ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+  L.push(md?"# 生豬 Gamma Flip 小結與具體操作":"【生豬 Gamma Flip 小結與具體操作】");
+  const metaStart=L.length+(md?1:0);if(md)L.push("");
+  L.push(`資料日：${m.dataDate}｜生豬主力 ${MAIN}：${fmt(m.S,0)}｜合併 Flip：${m.fAll==null?"區間內無":fmt(m.fAll,0)}｜總 GEX：${sgn(m.gAll,2)} 萬元／1%`);
+  L.push(`近 5 日 ATR：${m.atr?fmt(m.atr,0)+" 元":`約 ${fmt(m.atrEst,0)} 元（估）`}｜方向假設：${m.mode}`);
+  if(m.excluded.length)L.push(`已排除到期：${m.excluded.join("、")}`);
+  L.push(`匯出時間：${stamp}`);
+  if(md)for(let i=metaStart;i<L.length;i++)L[i]="- "+L[i];
+  for(const k of keys){const e=exportStore[k];if(!e)continue;const {g,adv,next}=e;
+    L.push("");
+    L.push(md?`## ${g.name}｜${adv.label}`:`■ ${g.name}｜${adv.label}`);
+    L.push(md?`**小結**：${strip(adv.verdict)}`:`小結：${strip(adv.verdict)}`);
+    L.push("");
+    for(const [a,b] of adv.levels)L.push(md?`- ${a}：${b}`:`・${a}：${b}`);
+    L.push("");
+    L.push(md?"**具體操作**":"具體操作：");
+    adv.plan.forEach((t,i)=>L.push(`${i+1}. ${strip(t)}`));
+  }
+  L.push("");
+  L.push(md?"> 依當日 Gamma 結構以固定規則自動產生，僅供判讀參考，不構成投資建議。":"※ 依當日 Gamma 結構以固定規則自動產生，僅供判讀參考，不構成投資建議。");
+  return L.join("\n");
+}
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>{t.hidden=true;},2600);}
+let dlNs,dlMode="none";
+(async()=>{
+  try{if(window.claude?.use){dlNs=await window.claude.use("downloads");if(dlNs){dlMode="cap";return;}
+      // 在 Claude 頁面內但沒有下載能力：隱藏下載鈕
+      document.body.classList.add("nodl");return;}}catch(e){}
+  dlMode="blob";
+})();
+async function saveFile(name,text){
+  if(dlMode==="cap"){
+    try{const r=await dlNs.save({filename:name,data:text});if(r.status==="saved")toast(`已下載 ${name}`);}
+    catch(err){const c=err&&err.code;toast(c==="declined"?"已取消下載":c==="rate_limited"?"下載視窗已開啟，請稍候再試":"這個檢視畫面無法下載，請改用「複製」");}
+    return;}
+  if(dlMode==="blob"){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain;charset=utf-8"}));a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);toast(`已下載 ${name}`);return;}
+  toast("下載功能還在載入，請稍候再試");
+}
+function copyFallback(text){
+  const ta=document.createElement("textarea");ta.value=text;ta.className="copybox";ta.setAttribute("aria-label","匯出文字");
+  document.querySelector(".exportbar").after(ta);ta.focus();ta.select();
+  toast("無法直接複製，已選取文字，請按 Ctrl+C／⌘C");setTimeout(()=>ta.remove(),20000);
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest&&e.target.closest("[data-ex]");if(!b||!exportMeta)return;
+  const keys=b.dataset.g==="all"?GROUPS.map(g=>g.key).filter(k=>exportStore[k]):[b.dataset.g];
+  const type=b.dataset.ex,text=exportText(keys,type==="md"?"md":"txt");
+  const tag=b.dataset.g==="all"?"全部":GROUPS.find(g=>g.key===b.dataset.g).name;
+  const day=(exportMeta.dataDate||"").replace(/-/g,"");
+  if(type==="copy"){
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>toast(`已複製「${tag}」小結與操作`),()=>copyFallback(text));}
+    else copyFallback(text);
+    return;}
+  saveFile(`LH_GammaFlip_${tag}_${day||"data"}.${type}`,text);
+});
+
+/* ---------- per-group advice ---------- */
+function expiryStats(code,rows,S,r){
+  const byK={};for(const x of rows){const o=byK[x.K]||(byK[x.K]={c:0,p:0});o[x.isCall?"c":"p"]+=x.oi;}
+  const ks=Object.keys(byK).map(Number).sort((a,b)=>a-b);
+  let pin=null,best=-1;for(const k of ks){if(Math.abs(k-S)/S>0.03)continue;const t=byK[k].c+byK[k].p;if(t>best){best=t;pin=k;}}
+  let maxPain=null,low=Infinity;
+  for(const s of ks){if(Math.abs(s-S)/S>0.08)continue;let pay=0;for(const k of ks){pay+=byK[k].c*Math.max(s-k,0)+byK[k].p*Math.max(k-s,0);}if(pay<low){low=pay;maxPain=s;}}
+  return {code,exp:rows[0].exp,days:rows[0].T*365,pin,maxPain,grp:rows[0].grp,ratio:rows[0].ratio||1,und:rows[0].und||code};
+}
+function strikeNear(rows,target,isCall,dir){
+  const ks=[...new Set(rows.filter(o=>o.isCall===isCall&&isFinite(o.px)&&o.px>0).map(o=>o.K))].sort((a,b)=>a-b);
+  if(!ks.length)return null;
+  if(dir<0){let b=null;for(const k of ks)if(k<=target)b=k;return b;}
+  if(dir>0){for(const k of ks)if(k>=target)return k;return null;}
+  return ks.reduce((a,k)=>Math.abs(k-target)<Math.abs(a-target)?k:a,ks[0]);
+}
+function px(rows,K,isCall){const o=rows.find(x=>x.K===K&&x.isCall===isCall);return o&&isFinite(o.px)?(o.pxR??o.px):null;}
+const r10=v=>Math.round(v/5)*5;
+function groupAdvice(g,{gg,w,expInfo},{S,r,grid,incRows,byExp,gAll,fAll,wAll,sd,refCode,A,atrReal}){
+  const half=r10(A/2),width=Math.max(STEP,Math.round(A/STEP)*STEP);
+  const P=v=>v==null||!isFinite(v)?"—":fmt(v,0);
+  const next=expInfo[0],exRows=byExp[next.code];
+  const ratio=next.ratio||1,KR=k=>fmt(Math.round(k/ratio),0),Fu=S/ratio;
+  // 1. 波動尺度：用此到期價平 IV 換算「日波動」與「到期波動」
+  let atm=exRows[0];for(const x of exRows)if(Math.abs(x.K-S)<Math.abs(atm.K-S))atm=x;
+  const sT=S*atm.ivUse*Math.sqrt(Math.max(exRows[0].T,1/365));
+  // 2. 合併體制（造市商看的是整本帳）
+  const z=fAll==null?null:(S-fAll)/sd;
+  const regime=z!=null&&Math.abs(z)<0.5?"near":gAll>=0?"pos":"neg";
+  // 3. 本區塊最近到期到期後，合併 Flip 移到哪裡（Gamma roll-off）
+  const post=incRows.filter(x=>x.code!==next.code);
+  const fPost=post.length?findFlip(grid,grid.map(s=>gexAt(post,s,r)),S):null;
+  const gPost=post.length?gexAt(post,S,r):0;
+  const share=gAll!==0?gg/Math.abs(gAll)*100:0;
+  const putW=wAll.put,callW=wAll.call;
+  const label={pos:"偏區間",neg:"偏順勢",near:"轉換區"}[regime];
+  const tagCls={pos:"pos",neg:"neg",near:"near"}[regime];
+  // 到期後體制變化
+  let roll;
+  if(gAll>=0&&gPost<0)roll=`<em class="warn">到期後轉為負 Gamma</em>：${next.code} 是目前主要的 Gamma 支撐，到期後${fPost!=null?`合併 Flip 升至 ${P(fPost)}，`:""}現價將落在 Flip 之下。`;
+  else if(gAll<0&&gPost>=0)roll=`到期後轉為正 Gamma：負 Gamma 部位隨 ${next.code} 退場${fPost!=null?`，合併 Flip 降至 ${P(fPost)}`:""}，波動可望收斂。`;
+  else roll=`到期後體制不變（${gPost>=0?"仍為正":"仍為負"} Gamma）${fPost!=null&&fAll!=null?`，合併 Flip 由 ${P(fAll)} 移至 ${P(fPost)}`:fPost!=null?`，合併 Flip 為 ${P(fPost)}`:""}。`;
+  const contrib=`本區塊占合併 GEX ${share>=0?"+":""}${fmt(share,0)}%（${(gg>=0)===(gAll>=0)?"順著":"抵銷"}合併方向）。`;
+  const expiring=g.key!=="M"&&next.days<=3.5;
+  let verdict;
+  const flipTxt=fAll==null?"掃描範圍內沒有合併 Flip":`現價${S>=fAll?"高於":"低於"}合併 Flip ${P(fAll)} 約 ${fmt(Math.abs(S-fAll),0)} 元（${fmt(Math.abs(z),1)} 個日波動）`;
+  const turnsNeg=gAll>=0&&gPost<0,turnsPos=gAll<0&&gPost>=0;
+  if(regime==="pos")verdict=`${flipTxt}，造市商逆勢避險，${turnsNeg?`到期前做區間${expiring?`（偏向 ${P(next.pin)} 磁吸）`:""}、到期後改順勢`:`${expiring?`到期前偏向 ${P(next.pin)} 磁吸，`:""}以區間操作為主`}。${roll}`;
+  else if(regime==="neg")verdict=`${flipTxt}，造市商順勢避險、波動放大，以順勢為主，${fAll!=null?"反彈到 Flip 前都算弱勢反彈":`整段價格都是負 Gamma，以 Call Wall ${P(callW)} 作為轉強關卡`}。${roll}`;
+  else verdict=`${flipTxt}，正負 Gamma 交界，最容易假突破，先等方向。${roll}`;
+  const levels=[["合併 Flip",P(fAll)],["到期後 Flip",P(fPost)],["日波動 / 到期波動",`±${fmt(r10(sd),0)} / ±${fmt(r10(sT),0)} 元`],["主力期貨",`${MAIN} ${fmt(S,0)}`],["磁吸 / 最大痛點",`${next.pin?KR(next.pin):"—"} / ${next.maxPain?KR(next.maxPain):"—"}（${next.code} 履約價）`],[atrReal?"近 5 日 ATR":"ATR（估）",`${fmt(r10(A),0)} 元｜停損 ${fmt(half,0)}／價差寬 ${fmt(width,0)}`]];
+  // 4. 具體操作：期貨價位（四捨五入到 10 點）＋本區塊最近到期的選擇權組合（以結算價估算）
+  const plan=[];
+  const W2=width;
+  if(regime==="pos"){
+    const lo=r10(Math.max(fAll!=null?fAll+0.25*sd:-Infinity,putW||-Infinity,S-1.5*sd));
+    const hi=r10(Math.min(callW||Infinity,S+1.5*sd));
+    const stop=fAll!=null?r10(fAll-0.5*A):r10(lo-0.5*A);
+    const mid=r10((lo+hi)/2);
+    const tL=expiring&&next.pin&&next.pin>lo+0.25*sd?next.pin:mid,tS=expiring&&next.pin&&next.pin<hi-0.25*sd?next.pin:mid;
+    plan.push(`主力低接：回落 ${fmt(lo,0)} 附近分批偏多，停損收盤跌破 ${fmt(stop,0)}（Flip 下方），目標 ${P(tL)}。`);
+    plan.push(`主力高出：上攻 ${fmt(hi,0)} 附近不追價、多單減碼或短空，停損站穩 ${fmt(r10(hi+0.5*A),0)}，目標 ${P(tS)}。`);
+    const sp=strikeNear(exRows,Math.min(fAll??S,S-sT),false,-1),sc=strikeNear(exRows,Math.max(callW||0,S+sT),true,1);
+    const spw=sp&&strikeNear(exRows,sp-W2,false,-1),scw=sc&&strikeNear(exRows,sc+W2,true,1);
+    if(sp&&sc&&spw&&scw){const cr=px(exRows,sp,false)-px(exRows,spw,false)+px(exRows,sc,true)-px(exRows,scw,true);
+      plan.push(`選擇權（${next.code}，標的 ${next.und} ${fmt(Fu,0)}）：鐵兀鷹 賣 ${KR(sp)}P／買 ${KR(spw)}P＋賣 ${KR(sc)}C／買 ${KR(scw)}C，以結算價估收約 ${fmt(cr,1)} 元，單邊最大風險約 ${fmt(Math.round(Math.max(sp-spw,scw-sc)/ratio)-cr,1)} 元（每手 ×16 噸）；Put 履約價放在 Flip 之下，跌破 Flip 即出場。`);}
+    plan.push(`失效條件：收盤跌破合併 Flip ${P(fAll)}，區間策略全部停止，改用負 Gamma 的順勢做法。`);
+  }else if(regime==="neg"){
+    const fl0=fAll!=null?fAll:(callW||S+sd);
+    const sellZone=r10(Math.min(fl0-0.5*A,S+A));
+    const stop=r10(fl0+0.5*A);
+    const t1=putW&&putW<S?putW:r10(S-A),t2=r10(t1-A);
+    plan.push(`主力順勢：反彈至 ${fmt(sellZone,0)}～${P(fl0)} 不過偏空，停損收盤站上 ${fmt(stop,0)}，目標 ${P(t1)}，跌破再看 ${fmt(t2,0)}。`);
+    plan.push(fAll!=null?`翻多條件：收盤站上 ${fmt(stop,0)}，避險轉為逆勢，空單全數回補，改回區間思維；負 Gamma 下的回補也會加速上漲，不要逆勢加空。`:`轉強條件：收盤站上 ${fmt(stop,0)}（Call Wall 之上）空單回補；負 Gamma 下的回補也會加速上漲，不要逆勢加空。`);
+    const k1=strikeNear(exRows,S,false,-1),k2=k1&&strikeNear(exRows,k1-width,false,-1);
+    if(k1&&k2&&k2<k1){const db=px(exRows,k1,false)-px(exRows,k2,false);
+      plan.push(`選擇權（${next.code}，標的 ${next.und} ${fmt(Fu,0)}）：買 ${KR(k1)}P／賣 ${KR(k2)}P 熊市價差，以結算價估成本約 ${fmt(db,1)} 元，最大獲利約 ${fmt(Math.round((k1-k2)/ratio)-db,1)} 元（每手 ×16 噸）；避免裸賣價平附近的期權。`);}
+    plan.push(`部位控管：波動放大，手數比正 Gamma 時減半，停損至少 1 個 ATR（約 ${fmt(r10(A),0)} 元）。`);
+  }else{
+    const up=r10(fAll+0.5*A),dn=r10(fAll-0.5*A);
+    plan.push(`觀望為主：${fmt(dn,0)}～${fmt(up,0)} 之間不建新倉，現有部位減碼。`);
+    plan.push(`條件單：收盤站上 ${fmt(up,0)} 轉區間偏多（停損 ${P(fAll)}）；跌破 ${fmt(dn,0)} 轉順勢偏空（停損 ${P(fAll)}）。`);
+    const k0=strikeNear(exRows,S,true,0);
+    if(k0&&px(exRows,k0,true)!=null&&px(exRows,k0,false)!=null){const c=px(exRows,k0,true)+px(exRows,k0,false);
+      plan.push(`選擇權（${next.code}，標的 ${next.und} ${fmt(Fu,0)}）：Flip 附近容易出現波動擴張，可考慮買 ${KR(k0)} 跨式，以結算價估成本約 ${fmt(c,1)} 元，損平 ${fmt(Math.round(k0/ratio)-c,0)}／${fmt(Math.round(k0/ratio)+c,0)}。`);}
+  }
+  if(turnsNeg){const fp=fPost??S;
+    plan.push(`到期後（${fmtD(next.exp).slice(5)} 收盤起）：若主力仍在 ${P(fPost)} 之下，區間單全部了結，改為反彈至 ${fmt(r10(fp-0.5*A),0)}～${P(fPost)} 不過偏空，停損站上 ${fmt(r10(fp+0.5*A),0)}。`);}
+  if(turnsPos)plan.push(`到期後（${fmtD(next.exp).slice(5)} 收盤起）：負 Gamma 部位退場，空單逢低回補，若站穩 ${P(fPost)} 改回區間思維。`);
+  if(expiring)plan.push(`到期提醒：${next.code} 期權剩 ${next.days.toFixed(1)} 天，到期前 ${next.und} 容易被履約價 ${next.pin?KR(next.pin):"—"} 吸住；到期日 15:00 收盤時的實值期權會自動行權轉成期貨部位，不想留倉要先平倉或申請放棄行權。`);
+  plan.push(contrib);
+  return {regime,label,tagCls,verdict,levels,plan,fPost,gPost,next,sT,share,turnsNeg,turnsPos};
+}
+
+/* ---------- history ---------- */
+let historyChart,history=[];
+function renderHistory(){
+  const note=$("histNote");
+  if(!history.length){if(historyChart){historyChart.destroy();historyChart=null;}note.textContent="每日資料累積後會在這裡顯示 Flip 與結算價的走勢。";return;}
+  const mode=$("signMode").value,items=history.slice(-120);
+  const labels=items.map(it=>it.date.slice(5).replace("-","/"));
+  const pick=k=>items.map(it=>it[`${mode}_${k}`]??null);
+  const flipAll=pick("flip");
+  const regime=items.map((it,i)=>flipAll[i]===null?null:it.F>=flipAll[i]);
+  const ds=[
+    {label:"主力期貨結算價",data:items.map(it=>it.F),borderColor:css("--accent"),borderWidth:2.2,pointRadius:items.length>40?1.5:3,
+      pointBackgroundColor:regime.map(r=>r===null?css("--muted"):r?css("--pos"):css("--neg")),pointBorderWidth:0},
+    {label:"合併 Flip",data:flipAll,borderColor:css("--flip"),borderWidth:2,borderDash:[5,4],pointRadius:0,spanGaps:true},
+    {label:"近月期權 Flip",data:pick("flipN1"),borderColor:css("--wed"),borderWidth:1.2,pointRadius:0,spanGaps:true},
+    {label:"次月期權 Flip",data:pick("flipN2"),borderColor:css("--fri"),borderWidth:1.2,pointRadius:0,spanGaps:true},
+    {label:"月選 Flip",data:pick("flipM"),borderColor:css("--mon"),borderWidth:1.2,pointRadius:0,spanGaps:true}];
+  if(historyChart)historyChart.destroy();
+  historyChart=new Chart($("historyChart"),{type:"line",data:{labels,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>`${it.dataset.label}：${fmt(it.parsed.y,0)}`,
+        afterBody:it=>{const i=it[0].dataIndex;const g=items[i][`${mode}_gex`];return g==null?"":`總 GEX：${sgn(g,2)} 萬元／1%`;}}}},
+      scales:{x:{ticks:{color:css("--muted"),maxTicksLimit:10,maxRotation:0},grid:{display:false}},
+              y:{ticks:{color:css("--muted"),callback:v=>fmt(v,0)},grid:{color:css("--line")}}}}});
+  const last=items.at(-1),lf=last[`${mode}_flip`];
+  const posDays=regime.filter(r=>r===true).length,tot=regime.filter(r=>r!==null).length;
+  note.textContent=`近 ${tot} 個交易日中，${posDays} 天收在合併 Flip 之上（正 Gamma）。最新 ${last.date}：結算價 ${fmt(last.F,0)}，Flip ${lf==null?"區間內無":fmt(lf,0)}。點的顏色：綠＝正 Gamma 日，紅＝負 Gamma 日。`;
+}
+
+/* ---------- wiring ---------- */
+function toLocalInput(d){const p=n=>String(n).padStart(2,"0");return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
+function loadDemo(){state=buildState(demo(),"demo");$("spot").value=state.spot;$("valDate").value=toLocalInput(state.val);
+  const b=$("srcBadge");b.className="src demo";b.textContent="範例資料（非真實行情）";$("msg").textContent="";render();}
+$("btnDemo").addEventListener("click",()=>{mode="manual";loadDemo();});
+$("csvFile").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{
+    const snap=JSON.parse(await f.text());
+    if(!snap||!Array.isArray(snap.rows)||!snap.futs)throw new Error("這不是生豬 Gamma Flip 的日資料 JSON（請選 data/daily/ 底下的檔案）。");
+    mode="manual";state=buildState(snap,f.name);
+    $("spot").value=state.spot;$("valDate").value=toLocalInput(state.val);
+    const b=$("srcBadge");b.className="src";b.textContent=`歷史資料｜${snap.tradeDate.replace(/-/g,"/")}｜生豬主力 ${snap.futContract} ${fmt(snap.F,0)}｜${snap.rows.length} 筆`;
+    $("msg").textContent=snap.atr5?"":"這一天的檔案沒有 ATR，改以日波動估算。";
+    render();
+  }catch(err){$("msg").textContent=err.message;}
+  e.target.value="";
+});
+let t;const deb=()=>{clearTimeout(t);t=setTimeout(()=>{state.spot=+$("spot").value||state.spot;const v=$("valDate").value;if(v)state.val=new Date(v);render();},200);};
+["spot","valDate","scanPct","ivFallback","rate"].forEach(id=>$(id).addEventListener("input",deb));
+$("signMode").addEventListener("change",render);
+const mq=matchMedia("(prefers-color-scheme: dark)");mq.addEventListener&&mq.addEventListener("change",render);
+new MutationObserver(render).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+/* ---------- auto data: artifact db → ./data/*.json (GitHub Pages) → demo ---------- */
+let mode="demo",latestSnap=null;
+const MOBILE_ARTIFACT="https://claude.ai/artifact/Kvevm6WcLTWW8e1NntF3xi";
+function applySnapshot(snap,origin){
+  if(!snap||!Array.isArray(snap.rows)||!snap.rows.length)return false;
+  latestSnap=snap;
+  if(mode==="manual")return true;
+  const keep=state.source==="auto"&&state.tradeDate===snap.tradeDate?state.included:{};
+  state=buildState(snap,"auto");state.included=keep;
+  mode="auto";$("spot").value=Math.round(+snap.F);$("valDate").value=toLocalInput(state.val);
+  const b=$("srcBadge");b.className="src";
+  b.textContent=`每日自動更新｜資料日 ${snap.tradeDate.replace(/-/g,"/")}｜生豬主力 ${snap.futContract||""} ${fmt(+snap.F,0)}${origin?"｜"+origin:""}`;
+  $("msg").textContent="";render();return true;
+}
+function applyHistory(h){history=Array.isArray(h?.items)?h.items:[];renderHistory();}
+async function loadAuto(){
+  let got=false;
+  const timer=setTimeout(()=>{if(!got&&mode!=="manual")$("msg").textContent="每日資料暫時讀不到，先顯示範例資料。";},10000);
+  const db=window.claude?.use?await window.claude.use("db").catch(()=>null):null;
+  if(db){
+    $("mobLink").href=MOBILE_ARTIFACT||"#";
+    db.doc("lh/latest").onSnapshot(s=>{if(s.exists&&applySnapshot(s.data(),"")){got=true;clearTimeout(timer);}
+      else if(!s.metadata?.fromCache&&!got)$("msg").textContent="尚未寫入每日資料，先顯示範例資料。";},
+      ()=>{if(!got)$("msg").textContent="每日資料讀取失敗，先顯示範例資料。";});
+    db.doc("lh/history").onSnapshot(s=>{if(s.exists)applyHistory(s.data());},()=>{});
+    return;
+  }
+  try{
+    const [l,h]=await Promise.all([fetch("./data/latest.json",{cache:"no-store"}),fetch("./data/history.json",{cache:"no-store"})]);
+    if(l.ok&&applySnapshot(await l.json(),"")){got=true;clearTimeout(timer);}
+    if(h.ok)applyHistory(await h.json());
+  }catch(e){/* 非 GitHub Pages 環境 */}
+}
+$("btnAuto").addEventListener("click",()=>{mode="auto";if(latestSnap){state.source="";applySnapshot(latestSnap,"");}else{$("msg").textContent="每日資料尚未載入。";}});
+function boot(){loadDemo();mode="demo";loadAuto();}
+if(window.Chart)boot();else window.addEventListener("load",boot);
+})();
+</script>
