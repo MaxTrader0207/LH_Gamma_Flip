@@ -1,61 +1,61 @@
-2026-11-14T01:37:38.568832+08:00
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3284
+2026-11-17T02:50:26.182907+08:00
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3322
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3295
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3322
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3295
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3322
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3295
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3323
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3296
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3323
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3296
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3310
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3296
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3308
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3296
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3300
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3296
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3308
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3284
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3311
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3295
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3311
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3296
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3310
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3358
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3311
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3356
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3300
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3356
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3311
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3358
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3309
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3356
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3309
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3356
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3309
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3356
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3319
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3358
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3319
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3358
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3319
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3354
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3319
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3356
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3318
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3358
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3319
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3358
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3316
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3358
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3307
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3358
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3305
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3356
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3319
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3355
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3316
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
-old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3355
+old fut http://www.dce.com.cn/publicweb/quotesdata/exportDayQuotesChData.html -> 412 3318
 old fut error HTTPConnectionPool(host='portal.dce.com.cn', port=80): Max retries exceeded with url: /publicweb/quotesdata/exportDayQuotesChData.html (Caused by NameResolutionError("HTTPConnection(host='portal.dce.com.cn', port=80): Failed to resolve 'portal.dce.com.cn' ([Errno -5] No address associated with hostname)"))
